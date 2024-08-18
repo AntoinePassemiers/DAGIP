@@ -1,0 +1,23 @@
+# Statistics and scientific computing
+numpy
+scipy
+statsmodels
+pandas
+
+# Optimal transport
+POT
+
+# Machine learning
+torch
+scikit-learn
+adapt
+
+# Visualization
+matplotlib
+seaborn
+
+# Misc
+rpy2
+tracemalloc
+tqdm
+pdf2image

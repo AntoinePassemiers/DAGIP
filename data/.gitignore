@@ -1,0 +1,6 @@
+*.tsv.gz
+*.tsv
+*.zip
+*.csv
+*.wig
+*.json
