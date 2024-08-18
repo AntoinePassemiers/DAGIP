@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quick start &mdash; dagip  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=92fd9be5" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Advanced usage" href="advanced-usage.html" />
+    <link rel="prev" title="dagip: OT-based bias correction method for high-dimensional biological data" href="../index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            dagip
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Quick start</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#installation">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#usage">Usage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#adding-constraints">Adding constraints</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#coverage-profiles">Coverage profiles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#hyper-parameters">Hyper-parameters</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="advanced-usage.html">Advanced usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="background.html">Background</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">dagip</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Quick start</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/guide/quick-start.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="quick-start">
+<h1>Quick start<a class="headerlink" href="#quick-start" title="Link to this heading"></a></h1>
+<section id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Link to this heading"></a></h2>
+<p>The package can be installed with:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements.txt
+python<span class="w"> </span>setup.py<span class="w"> </span>install
+</pre></div>
+</div>
+</section>
+<section id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Link to this heading"></a></h2>
+<p>In order to use <code class="docutils literal notranslate"><span class="pre">dagip</span></code>, two cohorts representative of the same population should be available. Typically, each cohort should be at least of size 40. More importantly, these cohorts should share similar biological characteristics (e.g., controls matched for age and sex). For each cohort, the data should be structured as a two-dimensional NumPy array. For the target domain (the domain where final downstream analysis will take place), the matrix is denoted by <code class="docutils literal notranslate"><span class="pre">Y</span></code>, a NumPy array of size <cite>(m, q)</cite>, where each row corresponds to a sample. For the source domain (the “biased” domain, containing the samples to be corrected), the matrix is denoted by <code class="docutils literal notranslate"><span class="pre">X</span></code>, a NumPy array of size <cite>(n, q)</cite>, where each row corresponds to a sample.</p>
+<p>In the general case, bias correction can be performed in the following way:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">dagip.core</span> <span class="kn">import</span> <span class="n">DomainAdapter</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">DomainAdapter</span><span class="p">()</span>
+<span class="n">X_adapted</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The output <code class="docutils literal notranslate"><span class="pre">X_adapted</span></code> is the corrected version of <code class="docutils literal notranslate"><span class="pre">X</span></code>. Correction is performed in such a way that <code class="docutils literal notranslate"><span class="pre">X_adapted</span></code> matches the distribution of <code class="docutils literal notranslate"><span class="pre">Y</span></code>.</p>
+<p>After inference, the trained model can be used to adapt any new sample in the source domain independently, without having recourse to any additional target cohort:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">X_new_adapted</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">X_new</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>where <code class="docutils literal notranslate"><span class="pre">X_new</span></code> contains new samples to be corrected.</p>
+</section>
+<section id="adding-constraints">
+<h2>Adding constraints<a class="headerlink" href="#adding-constraints" title="Link to this heading"></a></h2>
+<p>By default, the algorithm does not guarantee that the corrected data lies on the same manifold as the original data. For example, if <code class="docutils literal notranslate"><span class="pre">X</span></code> consists of methylation ratios (i.e., beta values), then each value should lie in the <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">1]</span></code> range. To add this constraint to the model, you can specify it through the <code class="docutils literal notranslate"><span class="pre">manifold</span></code> argument:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">dagip.core</span> <span class="kn">import</span> <span class="n">DomainAdapter</span>
+<span class="kn">from</span> <span class="nn">dagip.retraction</span> <span class="kn">import</span> <span class="n">RatioManifold</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">DomainAdapter</span><span class="p">(</span><span class="n">manifold</span><span class="o">=</span><span class="n">RatioManifold</span><span class="p">(</span><span class="n">eps</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>where <code class="docutils literal notranslate"><span class="pre">eps</span></code> is meant to prevent numerical instability by constraining values to stay in the <code class="docutils literal notranslate"><span class="pre">[eps,</span> <span class="pre">1</span> <span class="pre">-</span> <span class="pre">eps]</span></code> range instead. <code class="docutils literal notranslate"><span class="pre">eps</span></code> can also be specificied for the <code class="docutils literal notranslate"><span class="pre">ProbabilitySimplex</span></code> and <code class="docutils literal notranslate"><span class="pre">Positive</span></code> manifolds. If your data contains a lot of zeros, please use this feature carefully.</p>
+<p>Currently, the following manifolds are available:</p>
+<dl class="field-list simple">
+<dt class="field-odd">Identity<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Default manifold. Does not apply any constraint.</p>
+</dd>
+<dt class="field-even">Positive<span class="colon">:</span></dt>
+<dd class="field-even"><p>Enforces the positivity of each element of the matrix.</p>
+</dd>
+<dt class="field-odd">ProbabilitySimplex<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Enforces the positivity of each element of the matrix, as well as each of its row summing up to 1.</p>
+</dd>
+<dt class="field-even">RatioManifold<span class="colon">:</span></dt>
+<dd class="field-even"><p>Enforces each element of the matrix to stay in the <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">1]</span></code> range.</p>
+</dd>
+<dt class="field-odd">GIPManifold<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Enforces the positivity before performing GC-correction on each row of the matrix.</p>
+</dd>
+</dl>
+</section>
+<section id="coverage-profiles">
+<h2>Coverage profiles<a class="headerlink" href="#coverage-profiles" title="Link to this heading"></a></h2>
+<p>To run the algorithm on coverage profiles, consider using the <code class="docutils literal notranslate"><span class="pre">GIPManifold</span></code>. This manifold requires that the rows in <code class="docutils literal notranslate"><span class="pre">X</span></code> and <code class="docutils literal notranslate"><span class="pre">Y</span></code> have been GC-corrected already. To avoid introducing any discrepancy, prior GC-correction should be identical to the GC-correction performed by <code class="docutils literal notranslate"><span class="pre">GIPManifold</span></code>: algorithm and hyper-parameters should be the same. To ensure this, consider using our implementation:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">dagip.correction.gc</span> <span class="kn">import</span> <span class="n">gc_correction</span>
+
+<span class="n">X</span> <span class="o">=</span> <span class="n">gc_correction</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">gc_content</span><span class="p">,</span> <span class="n">frac</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
+<span class="n">Y</span> <span class="o">=</span> <span class="n">gc_correction</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span> <span class="n">gc_content</span><span class="p">,</span> <span class="n">frac</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>where <code class="docutils literal notranslate"><span class="pre">frac</span></code> is the fraction of data points used to build each local model (that is, the level of smoothing), and gc_content is a NumPy array of size <code class="docutils literal notranslate"><span class="pre">(q,)</span></code> containing the GC-content ratio of each bin.</p>
+<p>Then, the manifold should be specified:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">dagip.core</span> <span class="kn">import</span> <span class="n">DomainAdapter</span>
+<span class="kn">from</span> <span class="nn">dagip.retraction</span> <span class="kn">import</span> <span class="n">GIPManifold</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">DomainAdapter</span><span class="p">(</span><span class="n">manifold</span><span class="o">=</span><span class="n">GIPManifold</span><span class="p">(</span><span class="n">gc_content</span><span class="p">,</span> <span class="n">frac</span><span class="o">=</span><span class="mf">0.3</span><span class="p">))</span>
+</pre></div>
+</div>
+</section>
+<section id="hyper-parameters">
+<h2>Hyper-parameters<a class="headerlink" href="#hyper-parameters" title="Link to this heading"></a></h2>
+<p>The algorithm has other hyper-parameters:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">dagip.core</span> <span class="kn">import</span> <span class="n">DomainAdapter</span><span class="p">,</span> <span class="n">default_u_test</span>
+<span class="kn">from</span> <span class="nn">dagip.retraction</span> <span class="kn">import</span> <span class="n">Identity</span>
+<span class="kn">from</span> <span class="nn">dagip.spatial.euclidean</span> <span class="kn">import</span> <span class="n">EuclideanDistance</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">DomainAdapter</span><span class="p">(</span>
+    <span class="n">folder</span><span class="o">=</span><span class="s1">&#39;/somewhere&#39;</span><span class="p">,</span>
+    <span class="n">manifold</span><span class="o">=</span><span class="n">Identity</span><span class="p">(),</span>
+    <span class="n">pairwise_distances</span><span class="o">=</span><span class="n">EuclideanDistance</span><span class="p">(),</span>
+    <span class="n">u_test</span><span class="o">=</span><span class="n">default_u_test</span><span class="p">,</span>
+    <span class="n">var_penalty</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span>
+    <span class="n">reg_rate</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
+    <span class="n">max_n_iter</span><span class="o">=</span><span class="mi">4000</span><span class="p">,</span>
+    <span class="n">convergence_threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+    <span class="n">nn_n_hidden</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
+    <span class="n">nn_n_layers</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+    <span class="n">lr</span><span class="o">=</span><span class="mf">0.005</span><span class="p">,</span>
+    <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>Hyper-parameter list:</p>
+<dl class="field-list simple">
+<dt class="field-odd">folder<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Folder where to store figures.</p>
+</dd>
+<dt class="field-even">manifold<span class="colon">:</span></dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">dagip.retraction.base.Manifold</span></code> instance. Manifold used to add constraints on the data matrix. Please refer to <a class="reference internal" href="advanced-usage.html"><span class="doc">this section</span></a> for implementing custom manifolds.</p>
+</dd>
+<dt class="field-odd">prior_pairwise_distances<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">dagip.spatial.base.BaseDistance</span></code> instance. Used to build the cost matrix which defines the optimal transport problem, and compute the transport plan. Please refer to <a class="reference internal" href="advanced-usage.html"><span class="doc">this section</span></a> for implementing custom distance metrics.</p>
+</dd>
+<dt class="field-even">pairwise_distances<span class="colon">:</span></dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">dagip.spatial.base.BaseDistance</span></code> instance. After the transport plan has been computed, used to define the cost matrix and compute the regularized Wasserstein distance in a differentiable manner. While Euclidean distance is relevant is many settings, we recommend using the <code class="docutils literal notranslate"><span class="pre">dagip.spatial.euclidean_log.EuclideanDistanceOnLog</span></code> for correcting cfDNA fragment length distributions, for example. Please refer to <a class="reference internal" href="advanced-usage.html"><span class="doc">this section</span></a> for implementing custom distance metrics.</p>
+</dd>
+<dt class="field-odd">u_test<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Univariate statistical test which will be performed on each variable separately. Should be a function taking two arguments, <code class="docutils literal notranslate"><span class="pre">x</span></code> and <code class="docutils literal notranslate"><span class="pre">y</span></code> (both 1-dimensional NumPy arrays), and returns a p-value.</p>
+</dd>
+<dt class="field-even">var_penalty<span class="colon">:</span></dt>
+<dd class="field-even"><p>Penalty of the differences in total variance between <span class="math notranslate nohighlight">\(\mathcal{X}\)</span> and <span class="math notranslate nohighlight">\(Y\)</span>.</p>
+</dd>
+<dt class="field-odd">reg_rate<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Initial value of the regularization rate. A large value reduces the chances to introduce large changes in the data. If the two cohorts <code class="docutils literal notranslate"><span class="pre">X</span></code> and <code class="docutils literal notranslate"><span class="pre">Y</span></code> are expected to be perfectly superimposed after correction (for example if <code class="docutils literal notranslate"><span class="pre">Y</span></code> contains technical replicates of samples in <code class="docutils literal notranslate"><span class="pre">X</span></code>), then <code class="docutils literal notranslate"><span class="pre">reg_rate</span></code> can be set to a low value instead.</p>
+</dd>
+<dt class="field-even">max_n_iter<span class="colon">:</span></dt>
+<dd class="field-even"><p>Maximum number of iterations of the algorithm.</p>
+</dd>
+<dt class="field-odd">convergence_threshold<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Cutoff on the median of p-values computed with the <code class="docutils literal notranslate"><span class="pre">u_test</span></code> function. When the median p-value exceeds that threshold, the algorithm stops.</p>
+</dd>
+<dt class="field-even">nn_n_hidden<span class="colon">:</span></dt>
+<dd class="field-even"><p>Number of hidden neurons in each layer of the neural network model.</p>
+</dd>
+<dt class="field-odd">nn_n_layers<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Number of layers in the neural network model.</p>
+</dd>
+<dt class="field-even">lr<span class="colon">:</span></dt>
+<dd class="field-even"><p>Learning rate used to update the parameters of the neural network model.</p>
+</dd>
+<dt class="field-odd">verbose<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Whether to print debugging information.</p>
+</dd>
+</dl>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../index.html" class="btn btn-neutral float-left" title="dagip: OT-based bias correction method for high-dimensional biological data" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="advanced-usage.html" class="btn btn-neutral float-right" title="Advanced usage" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Antoine Passemiers.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

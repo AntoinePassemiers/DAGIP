@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Advanced usage &mdash; dagip  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=92fd9be5" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Background" href="background.html" />
+    <link rel="prev" title="Quick start" href="quick-start.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            dagip
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="quick-start.html">Quick start</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Advanced usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#custom-manifold">Custom manifold</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#custom-distance-metric">Custom distance metric</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="background.html">Background</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">dagip</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Advanced usage</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/guide/advanced-usage.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="advanced-usage">
+<h1>Advanced usage<a class="headerlink" href="#advanced-usage" title="Link to this heading"></a></h1>
+<section id="custom-manifold">
+<h2>Custom manifold<a class="headerlink" href="#custom-manifold" title="Link to this heading"></a></h2>
+<p>To correct each sample <span class="math notranslate nohighlight">\(X_{i\cdot}\)</span> in the source domain, the adapter uses the following function:</p>
+<div class="math notranslate nohighlight">
+\[\mathcal{X} = f(f^{-1}(X) + g(X))\]</div>
+<p>where <code class="docutils literal notranslate"><span class="pre">f</span></code> is a differentiable function that maps each row of an input matrix onto a manifold, and <code class="docutils literal notranslate"><span class="pre">g</span></code> is a multi-layer perceptron taking p-dimensional vectors as input and producing vectors of the same size. Intuitively, <code class="docutils literal notranslate"><span class="pre">g</span></code> is a model used to explicitly learn the bias between the source and the target domains.</p>
+<p>To implement a new manifold, both <span class="math notranslate nohighlight">\(f\)</span> and <span class="math notranslate nohighlight">\(f^{-1}\)</span> should be defined. <span class="math notranslate nohighlight">\(f\)</span> and <span class="math notranslate nohighlight">\(f^{-1}\)</span> correspond to the <code class="docutils literal notranslate"><span class="pre">_transform</span></code> and <code class="docutils literal notranslate"><span class="pre">_inverse_transform</span></code> abstract methods from the <code class="docutils literal notranslate"><span class="pre">dagip.retraction.base.Manifold</span></code> base class.</p>
+<p>Let’s take as example the multinomial manifold, namely the manifold of matrices with positive elements and having their rows summing up to 1 each:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">from</span> <span class="nn">dagip.retraction.base</span> <span class="kn">import</span> <span class="n">Manifold</span>
+
+
+<span class="k">class</span> <span class="nc">ProbabilitySimplex</span><span class="p">(</span><span class="n">Manifold</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eps</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-6</span><span class="p">):</span>
+        <span class="c1"># Constant used to prevent numerical issues</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eps</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">eps</span>
+
+    <span class="k">def</span> <span class="nf">_transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+        <span class="c1"># Project X onto the multinomial manifold</span>
+        <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">softmax</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_inverse_transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+        <span class="n">X</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">clamp</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">eps</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>  <span class="c1"># Avoid numerical issues</span>
+        <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>  <span class="c1"># Project X back in the Euclidean space</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">_transform</span></code> projects the data from the Euclidean space to the given manifold, while <code class="docutils literal notranslate"><span class="pre">_inverse_transform</span></code> performs the reverse mapping, from the manifold to the Euclidean space. Let’s note that in the given example, the logarithm is indeed the inverse of the softmax operation, since <code class="docutils literal notranslate"><span class="pre">f^{-1}</span></code> is called before <code class="docutils literal notranslate"><span class="pre">f</span></code>, and <code class="docutils literal notranslate"><span class="pre">X</span></code> is assumed to have its rows summing to 1 beforehand. The assumption that <code class="docutils literal notranslate"><span class="pre">X</span></code> is already on the manifold can be exploited to easily implement otherwise non-invertible functions.</p>
+</section>
+<section id="custom-distance-metric">
+<h2>Custom distance metric<a class="headerlink" href="#custom-distance-metric" title="Link to this heading"></a></h2>
+<p>Implementing custom metrics is more straightforward, as only the <code class="docutils literal notranslate"><span class="pre">pairwise_distances</span></code> method needs to be defined. Because <code class="docutils literal notranslate"><span class="pre">X</span></code> and <code class="docutils literal notranslate"><span class="pre">Y</span></code> are of dimensions <cite>(n, p)</cite> and <cite>(m, p)</cite>, respectively, the output of the method should be a PyTorch tensor of shape <cite>(n, m)</cite>. The method should be differentiable.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">from</span> <span class="nn">dagip.spatial.base</span> <span class="kn">import</span> <span class="n">BaseDistance</span>
+
+
+<span class="k">class</span> <span class="nc">ManhattanDistance</span><span class="p">(</span><span class="n">BaseDistance</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">pairwise_distances</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Y</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">cdist</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="quick-start.html" class="btn btn-neutral float-left" title="Quick start" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="background.html" class="btn btn-neutral float-right" title="Background" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Antoine Passemiers.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
