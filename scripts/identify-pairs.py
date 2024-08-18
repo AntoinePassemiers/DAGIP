@@ -38,7 +38,7 @@ RESULTS_FOLDER = os.path.join(ROOT, '..', 'results', 'pairs')
 os.makedirs(RESULTS_FOLDER, exist_ok=True)
 
 
-"""
+
 parser = argparse.ArgumentParser()
 parser.add_argument(
     'dataset',
@@ -50,17 +50,10 @@ parser.add_argument(
     ],
     help='Dataset name'
 )
-parser.add_argument(
-    'method',
-    type=str,
-    choices=['baseline', 'centering-scaling', 'dryclean', 'mapping-transport', 'da'],
-    help='Correction method'
-)
 args = parser.parse_args()
 
-METHOD = args.method
 DATASET = args.dataset
-"""
+
 
 def main(METHOD: str, DATASET: str, param) -> None:
 
@@ -161,26 +154,6 @@ def main(METHOD: str, DATASET: str, param) -> None:
                 Xt=X_adapted[idx2_train, :]
             )
             X_adapted[idx1, :] = model.transform(Xs=X_adapted[idx1, :])
-        elif METHOD == 'ridge':
-            bias = X_adapted[idx1_train, :] - X_adapted[idx2_train, :]
-            model = MultiOutputRegressor(Ridge())
-            model.fit(X_adapted[idx1_train, :], bias)
-            bias_pred = model.predict(X_adapted[idx1])
-            X_adapted[idx1, :] -= bias_pred
-        elif METHOD == 'gbm-reg':
-            bias = X_adapted[idx1_train, :] - X_adapted[idx2_train, :]
-            bias = np.concatenate((bias, np.zeros_like(bias)), axis=0)
-            from sklearn.ensemble import RandomForestRegressor
-            model = RandomForestRegressor()
-            model.fit(X_adapted[np.concatenate((idx1_train, idx2_train), axis=0), :], bias)
-            bias_pred = model.predict(X_adapted[idx1])
-            X_adapted[idx1, :] -= bias_pred
-        elif METHOD == 'gbm':
-            bias = X_adapted[idx1_train, :] - X_adapted[idx2_train, :]
-            model = MultiOutputRegressor(lightgbm.LGBMRegressor(verbosity=-1, n_estimators=100, random_state=0xCAFE))
-            model.fit(X_adapted[idx1_train, :], bias)
-            bias_pred = model.predict(X_adapted[idx1])
-            X_adapted[idx1, :] -= bias_pred
         elif METHOD == 'baseline':
             X_adapted = X
         else:
@@ -232,9 +205,8 @@ def main(METHOD: str, DATASET: str, param) -> None:
         json.dump(results, f)
 
 
+
 DATASETS = ['OV-forward', 'NIPT-chemistry', 'NIPT-lib', 'NIPT-adapter', 'NIPT-hs2000', 'NIPT-hs2500', 'NIPT-hs4000']
-#METHODS = ['baseline', 'centering-scaling', 'mapping-transport', 'dryclean', 'ridge']
-METHODS = ['da']
+METHODS = ['baseline', 'centering-scaling', 'dryclean', 'mapping-transport', 'da']
 for method in METHODS:
-    for dataset in DATASETS:
-        main(method, dataset, param=param)
+    main(method, DATASET, param=param)

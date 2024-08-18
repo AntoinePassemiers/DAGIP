@@ -1,68 +1,83 @@
-# DAGIP: A domain adaptation algorithm for high-dimensional bioinformatics data
+# DAGIP: A bias correction algorithm for cell-free DNA data
+
+Given two groups of matched (preferentially paired) samples sequenced under different protocols, the tool explicitly learns the bias using a neural network. The approach builds on Optimal Transport theory, and exploits sample-to-sample similarities to define how to perform bias correction.
+
+Documentations are available at [antoinepassemiers.github.io/DAGIP/](antoinepassemiers.github.io/DAGIP/)
 
 ---
 
+## Install the tool
+
 Install dependencies:
 ```bash
-pip3 install -r requirements.txt
+pip install -r requirements.txt
 ```
+
+Install the package:
+```bash
+python setup.py install --user
+```
+
+---
+
+## Basic usage:
+
+```python
+from dagip.core import DomainAdapter
+
+# Let X and Y be two numpy arrays, where the rows are (coverage, methylation, fragmentomic) profiles and columns are features (e.g., DMRs, bins). Y and X have been produced under sequencing protocols 1 and 2, respectively.
+
+# Build a model from the matched groups
+model = DomainAdapter()
+X_adapted = model.fit_transform(X, Y)
+
+# X_adapted is a numpy array of same dimensions as X
+
+# Save the model
+model.save('some/location.pt')
+
+...
+
+# Load the model
+model.load('some/location.pt')
+
+# Perform bias correction on new independent samples from sequencing protocol 2
+X_new_adapted = model.transform(X_new)
+```
+
+For more advanced usage, please check the documentation.
+
+---
+
+## Reproduce the results from the manuscript
 
 To reproduce the results presented in our paper, first download the datasets from the FigShare repository (DOI: 10.6084/m9.figshare.24459304) and place its content in the `data` folder. The repository is available at [https://figshare.com/s/5f837a93ea2719ffcaf9](https://figshare.com/s/5f837a93ea2719ffcaf9).
 
-Convert the data sets to NumPy arrays for more efficient usage:
+Preprocess the data:
 ```bash
-python3 build-datasets.py
+python scripts/preprocess.py
+python scripts/50kb-to1mb.py
+python scripts/to-numpy.py
 ```
 
-#### Computational experiments on sample pair identification
+#### Cancer detection
 
-Experiments on sample pairs identification:
 ```bash
-python3 pairs.py OV-forward ot
-...
-python3 pairs.py NIPT-adapter ot
-python3 pairs.py NIPT-hs4000 ot
+python validate-cnas.py HL
+python validate-cnas.py DLBCL
+python validate-cnas.py MM
+python validate-cnas.py OV
+python validate-fragmentomics-multimodal.py
 ```
 
-Available experiments are `OV-forward`, `OV-backward`, `NIPT-chemistry`, `NIPT-lib`, `NIPT-adapter`, `NIPT-hs2000`, `NIPT-hs2500` and `NIPT-hs4000`.
+#### Cross-validation with paired samples
 
-To experiment with GC-correction instead:
 ```bash
-python3 pairs.py NIPT-hs4000 gc-correction
-```
-Available methods are `none`, `centering-scaling`, `gc-correction` and `ot`.
-
-When using our OT approach, regularization and early stopping can be disabled as such:
-```bash
-python3 pairs.py NIPT-hs4000 ot --noreg
-```
-
-To assign pairs using the transport plan directly:
-```bash
-python3 pairs.py NIPT-hs4000 ot --noreg --gamma
-```
-
-#### Computational experiments on supervised learning
-
-To perform the experiments on supervised learning:
-```bash
-python3 validation.py HL
-python3 validation.py DLBCL
-python3 validation.py MM
-python3 validation.py OV-forward
-python3 validation.py OV-backward
-```
-
-#### Computational experiments on CNA calling
-
-To perform the experiments on CNAs, R should be installed first, and the GitHub repository of ichorCNA should be copied to the root of this repository under the name `ichorCNA-master`. To run the experiments:
-```bash
-python3 icna.py
-```
-
-#### Reproducing Figure 2
-
-Reproduce figure 2:
-```bash
-python3 fig2.py
+python identify-pairs.py OV-forward
+python identify-pairs.py NIPT-chemistry
+python identify-pairs.py NIPT-lib
+python identify-pairs.py NIPT-adapter
+python identify-pairs.py NIPT-hs2000
+python identify-pairs.py NIPT-hs2500
+python identify-pairs.py NIPT-hs4000
 ```

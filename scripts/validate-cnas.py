@@ -35,7 +35,7 @@ parser.add_argument(
     'dataset',
     type=str,
     choices=[
-        'HL', 'DLBCL', 'MM', 'OV-forward', 'OV-backward'
+        'HL', 'DLBCL', 'MM', 'OV',
     ],
     help='Dataset name'
 )
@@ -50,7 +50,7 @@ bin_starts = df['START'].to_numpy()
 bin_ends = df['END'].to_numpy()
 
 # Load data
-filename = 'OV.npz' if (DATASET in {'OV-forward', 'OV-backward'}) else 'HEMA.npz'
+filename = 'OV.npz' if (DATASET == 'OV') else 'HEMA.npz'
 data = np.load(os.path.join(ROOT, DATA_FOLDER, 'numpy', filename), allow_pickle=True)
 gc_codes = data['gc_codes']
 gc_dict = {gc_code: i for i, gc_code in enumerate(gc_codes)}
@@ -61,10 +61,7 @@ t = data['t']
 groups = np.squeeze(LabelEncoder().fit_transform(data['groups'][:, np.newaxis]))
 
 # Define labels
-if DATASET == 'OV-forward':
-    y = (y == 'OV').astype(int)
-elif DATASET == 'OV-backward':
-    d = 1 - d
+if DATASET == 'OV':
     y = (y == 'OV').astype(int)
 elif DATASET == 'HEMA':
     y = (y != 'Healthy').astype(int)
@@ -96,11 +93,11 @@ manifold = Positive()
 pairwise_distances = SquaredEuclideanDistance()
 
 METHODS = [
-    #(BaselineMethod(), 'baseline'),
-    #(CenteringScaling(), 'center-and-scale'),
-    #(KernelMeanMatching(), 'kmm'),
-    #(MappingTransport(per_label=False), 'mapping-transport'),  # per_label=True makes the model crash for some reason
-    #(OTDomainAdaptation(manifold, pairwise_distances, 'tmp'), 'da'),
+    (BaselineMethod(), 'baseline'),
+    (CenteringScaling(), 'center-and-scale'),
+    (KernelMeanMatching(), 'kmm'),
+    (MappingTransport(per_label=False), 'mapping-transport'),  # per_label=True makes the model crash for some reason
+    (OTDomainAdaptation(manifold, pairwise_distances, 'tmp'), 'da'),
     (DryClean(bin_chr_names, bin_starts, bin_ends, f'tmp/dryclean/{DATASET}'), 'dryclean'),
 ]
 
