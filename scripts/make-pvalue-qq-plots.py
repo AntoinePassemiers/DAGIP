@@ -27,7 +27,7 @@ from dagip.tools.dryclean import run_dryclean
 from dagip.correction.gc import gc_correction
 from dagip.nipt.binning import ChromosomeBounds
 from dagip.retraction import *
-from dagip.plot import plot_end_motif_freqs, scatterplot_with_sample_importances, loo_influence_analysis
+from dagip.plot import scatterplot_with_sample_importances
 
 
 ROOT = os.path.dirname(os.path.abspath(__file__))

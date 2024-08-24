@@ -139,12 +139,15 @@ class SovRefine:
             return 1.
 
     def sov_refine(self):
-        SOV_refine = 0.
-        N = 0.
-        for i in range(self._n_states):
-            unnormalized_sov_i = self.unnormalized_sov(i)
-            N_i = self.normalization_factor(i)
-            SOV_refine += unnormalized_sov_i
-            N += N_i
-        SOV_refine /= N
-        return SOV_refine
+        if np.all(self._y == self._y_hat):
+            return 1.
+        else:
+            SOV_refine = 0.
+            N = 0.
+            for i in range(self._n_states):
+                unnormalized_sov_i = self.unnormalized_sov(i)
+                N_i = self.normalization_factor(i)
+                SOV_refine += unnormalized_sov_i
+                N += N_i
+            SOV_refine /= N
+            return SOV_refine

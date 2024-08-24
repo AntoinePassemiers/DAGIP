@@ -15,9 +15,9 @@ os.makedirs(FIGURES_FOLDER, exist_ok=True)
 
 
 DATASETS = ['OV-forward', 'NIPT-chemistry', 'NIPT-lib', 'NIPT-adapter', 'NIPT-hs2000', 'NIPT-hs2500', 'NIPT-hs4000']
-METHODS = ['baseline', 'centering-scaling', 'mapping-transport', 'dryclean', 'da']
 METRICS = ['pca25-accuracy', 'pca25-r2']
 METRIC_NAMES = ['Pairing accuracy based on Euclidean distance', r'Coefficient of determination $R^2$']
+METHODS = ['baseline', 'centering-scaling', 'mapping-transport', 'dryclean', 'da']
 METHOD_NAMES = ['Baseline', 'Center-and-scale', 'MappingTransport', 'dryclean', 'DAGIP']
 
 results = {method: {metric: [] for metric in METRICS} for method in METHODS}

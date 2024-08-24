@@ -7,6 +7,7 @@ sys.path.append(os.path.join(ROOT, '..'))
 
 import numpy as np
 import scipy.stats
+import seaborn as sns
 import pandas as pd
 import statsmodels.stats.api as sms
 from sklearn.metrics import roc_curve, precision_recall_curve
@@ -22,9 +23,11 @@ RESULTS_FOLDER = os.path.join(ROOT, '..', 'results', 'supervised-learning')
 FIGURES_FOLDER = os.path.join(ROOT, '..', 'figures')
 
 
-#METHODS = ['baseline', 'dryclean', 'center-and-scale', 'kmm', 'mapping-transport', 'da']
-METHODS = ['baseline', 'center-and-scale', 'kmm', 'mapping-transport', 'da']
+METHODS = ['baseline', 'dryclean', 'center-and-scale', 'kmm', 'mapping-transport', 'da']
+METHOD_NAMES = ['Baseline', 'dryclean', 'Center-and-scale', 'KMM', 'MappingTransport', 'DAGIP']
+#METHODS = ['baseline', 'center-and-scale', 'kmm', 'mapping-transport', 'da']
 COLORS = ['#a883ef', '#f996ab', '#f35ee2', 'teal', '#f4c45a', '#b1e468']
+palette = {method_name: color for method_name, color in zip(METHOD_NAMES, COLORS)}
 TITLES = [
     'HL (coverage profiles)',
     'DLBCL (coverage profiles)',
@@ -53,7 +56,7 @@ print('')
 
 for dataset in DATASETS:
     table = LaTeXTable()
-    for method_name in METHODS:
+    for method_name, pretty_method_name in zip(METHODS, METHOD_NAMES):
         if not os.path.exists(os.path.join(RESULTS_FOLDER, f'{dataset}-{method_name}.json')):
             continue
         with open(os.path.join(RESULTS_FOLDER, f'{dataset}-{method_name}.json'), 'r') as f:
@@ -67,13 +70,125 @@ for dataset in DATASETS:
     print('')
 
 
-import sys; sys.exit(0)
 
-roc = True
+for metric in ['mcc', 'auroc']:
+
+    all_results = {method_name: [] for method_name in METHOD_NAMES}
+
+    df_data = {metric: [], 'Method': [], 'Pathology': []}
+    error_bars = []
+    for dataset in DATASETS:
+        for method_name, pretty_method_name in zip(METHODS, METHOD_NAMES):
+            if not os.path.exists(os.path.join(RESULTS_FOLDER, f'{dataset}-{method_name}.json')):
+                continue
+            with open(os.path.join(RESULTS_FOLDER, f'{dataset}-{method_name}.json'), 'r') as f:
+                data = json.load(f)
+                data = data[method_name]
+            
+            res = []
+            for ml_model in ['rf', 'svm', 'reglog']:
+                res += [x[metric] for x in data['supervised-learning'][ml_model]]
+            all_results[pretty_method_name] += res
+            confint = sms.DescrStatsW(res).tconfint_mean()
+            df_data[metric].append(np.mean(res))
+            df_data['Method'].append(pretty_method_name)
+            df_data['Pathology'].append(dataset if (dataset != 'OV-forward') else 'OV')
+            error_bars.append(0.5 * (confint[1] - confint[0]))
+
+    for pretty_method_name in METHOD_NAMES:
+        print(f'Average {metric} for {pretty_method_name}: {np.mean(all_results[pretty_method_name])}')
+
+    df = pd.DataFrame(df_data)
+
+    plt.figure(figsize=(4, 8))
+
+    ax = plt.subplot(1, 1, 1)
+    sns.barplot(ax=ax, x=metric, y='Pathology', hue='Method', data=df, palette=palette, orient='h', legend=False)
+    ax.set_xlabel(metric.upper())
+    ax.set_ylabel('Cancer type')
+    sns.despine()
+
+    for i, bar in enumerate(ax.patches):
+        bar_height = bar.get_height()
+        bar_y = bar.get_y()
+        bar_width = bar.get_width()
+        ax.errorbar(
+            bar_width, bar_y + bar_height / 2, xerr=error_bars[i], fmt='none', 
+            capsize=5, color='black'
+        )
+
+        if bar_width - error_bars[i] < 0.2:
+            ax.annotate(
+                f'{bar_width:.3f} ± {error_bars[i]:.3f}', 
+                (bar_width + error_bars[i], bar_y + bar_height / 2.), 
+                ha='center',
+                va='center',
+                xytext=(35, -1),
+                textcoords='offset points',
+                color='black',
+                weight='bold',
+                fontsize=7,
+            )
+        else:
+            ax.annotate(
+                f'{bar_width:.3f}', 
+                (bar_width - error_bars[i], bar_y + bar_height / 2.), 
+                ha='center',
+                va='center',
+                xytext=(-20, -1),
+                textcoords='offset points',
+                color='white',
+                weight='bold',
+                fontsize=7,
+            )
+
+            ax.annotate(
+                f'± {error_bars[i]:.3f}', 
+                (bar_width + error_bars[i], bar_y + bar_height / 2.), 
+                ha='center',
+                va='center',
+                xytext=(20, -1),
+                textcoords='offset points',
+                color='black',
+                weight='bold',
+                fontsize=7,
+            )
+
+    plt.tight_layout()
+    plt.savefig(os.path.join(FIGURES_FOLDER, f'{metric}.png'), dpi=400)
+
+    plt.figure(figsize=(6, 6))
+    ax = plt.subplot(1, 1, 1)
+    mat = []
+    for method1 in METHOD_NAMES:
+        row = []
+        for method2 in METHOD_NAMES:
+            xs = all_results[method1]
+            ys = all_results[method2]
+            if len(xs) == len(ys):  # Methods were run on the same folds
+                pvalue = scipy.stats.ttest_rel(xs, ys, alternative='less').pvalue
+            else:
+                pvalue = scipy.stats.ttest_ind(xs, ys, alternative='less').pvalue
+            row.append(pvalue)
+        mat.append(row)
+    mat = np.asarray(mat)
+
+    df = pd.DataFrame(
+        mat,
+        index=METHOD_NAMES,
+        columns=METHOD_NAMES
+    )
+    seaborn.heatmap(
+        df, annot=True, fmt='.1e', ax=ax,
+        cbar=False, linewidths=2, linecolor='white', cmap='viridis_r'
+    )
+    ax.set_title(f'Significance of {metric.upper()} differences (t-test p-values)')
+    plt.tight_layout()
+    plt.savefig(os.path.join(FIGURES_FOLDER, f'{metric}-significance.png'), dpi=400)
+
 
 plt.figure(figsize=(12, 8))
-
-all_results = {method: [] for method in METHODS}
+roc = True
 
 for k, (title, dataset) in enumerate(zip(TITLES, DATASETS)):
     results = []
@@ -88,9 +203,6 @@ for k, (title, dataset) in enumerate(zip(TITLES, DATASETS)):
         with open(os.path.join(RESULTS_FOLDER, f'{dataset}-{method_name}.json'), 'r') as f:
             data = json.load(f)
             data = data[method_name]
-
-        for ml_model in ['rf', 'svm', 'reglog']:
-            all_results[method_name] += [x['mcc'] for x in data['supervised-learning'][ml_model]]
 
         y, y_hat = [], []
         for ml_model in ['svm']:
@@ -124,17 +236,4 @@ ax.legend(handles=handles)
 ax.set_axis_off()
 
 plt.tight_layout()
-
 plt.savefig(os.path.join(FIGURES_FOLDER, 'roc-curves.png'), dpi=400)
-plt.show()
-
-print('')
-for method_name in METHODS:
-    values = all_results[method_name]
-    confint = sms.DescrStatsW(values).tconfint_mean()
-    if len(all_results[method_name]) == len(all_results['da']):  # Same folds were used
-        pvalue = scipy.stats.ttest_rel(all_results[method_name], all_results['da'], alternative='less').pvalue
-    else:
-        pvalue = scipy.stats.ttest_ind(all_results[method_name], all_results['da'], alternative='less').pvalue
-    print(method_name, pvalue, np.mean(values), confint)
-

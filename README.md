@@ -13,6 +13,8 @@ Install dependencies:
 pip install -r requirements.txt
 ```
 
+To reproduce the results of our manuscript, ``rpy2`` should be installed, as well the following R packages: ``dplyr``, ``GenomicRanges`` and ``dryclean``.
+
 Install the package:
 ```bash
 python setup.py install --user

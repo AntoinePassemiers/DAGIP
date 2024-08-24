@@ -1,7 +1,4 @@
 import sys
-
-print('Started with args: ', sys.argv)
-
 import argparse
 import json
 import os
@@ -94,11 +91,11 @@ pairwise_distances = SquaredEuclideanDistance()
 
 METHODS = [
     (BaselineMethod(), 'baseline'),
-    (CenteringScaling(), 'center-and-scale'),
-    (KernelMeanMatching(), 'kmm'),
-    (MappingTransport(per_label=False), 'mapping-transport'),  # per_label=True makes the model crash for some reason
-    (OTDomainAdaptation(manifold, pairwise_distances, 'tmp'), 'da'),
-    (DryClean(bin_chr_names, bin_starts, bin_ends, f'tmp/dryclean/{DATASET}'), 'dryclean'),
+    #(CenteringScaling(), 'center-and-scale'),
+    #(KernelMeanMatching(), 'kmm'),
+    #(MappingTransport(per_label=False), 'mapping-transport'),  # per_label=True makes the model crash for some reason
+    #(OTDomainAdaptation(manifold, pairwise_distances, 'tmp'), 'da'),
+    #(DryClean(bin_chr_names, bin_starts, bin_ends, f'tmp/dryclean/{DATASET}'), 'dryclean'),
 ]
 
 for method, method_name in METHODS:

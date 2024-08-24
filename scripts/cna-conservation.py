@@ -228,13 +228,13 @@ def compute_metrics_signifiance(res1, res2, res1_baseline, res2_baseline):
 
     return {
         'Accuracy (ploidy)': scipy.stats.ttest_rel(res['cna'], res_baseline['cna'], alternative='less').pvalue,
-        'Accuracy (poildy sign)': scipy.stats.ttest_rel(res['cna-sign'], res_baseline['cna-sign'], alternative='less').pvalue,
+        'Accuracy (ploidy sign)': scipy.stats.ttest_rel(res['cna-sign'], res_baseline['cna-sign'], alternative='less').pvalue,
         'SOV_REFINE': scipy.stats.ttest_rel(res['SOV_REFINE'], res_baseline['SOV_REFINE'], alternative='less').pvalue,
-        'r2 (Log ratios)': scipy.stats.ttest_rel(res['log-r'], res_baseline['log-r'], alternative='greater').pvalue,
-        'r2 (tumor fractions)': scipy.stats.ttest_rel(res['tf'], res_baseline['tf'], alternative='greater').pvalue,
-        'r2 (tumor ploidy)': scipy.stats.ttest_rel(res['ploidy'], res_baseline['ploidy'], alternative='greater').pvalue,
-        'r2 (cellular prevalence)': scipy.stats.ttest_ind(res['prevalence'], res_baseline['prevalence'], alternative='greater').pvalue,
-        'r2 (proportion of subclonal CNAs)': scipy.stats.ttest_ind(res['subclonal'], res_baseline['subclonal'], alternative='greater').pvalue,
+        'Log-ratios': scipy.stats.ttest_rel(res['log-r'], res_baseline['log-r'], alternative='greater').pvalue,
+        'Tumor fraction': scipy.stats.ttest_rel(res['tf'], res_baseline['tf'], alternative='greater').pvalue,
+        'Tumor ploidy': scipy.stats.ttest_rel(res['ploidy'], res_baseline['ploidy'], alternative='greater').pvalue,
+        'Cellular prevalence': scipy.stats.ttest_ind(res['prevalence'], res_baseline['prevalence'], alternative='greater').pvalue,
+        'Proportion of subclonal CNAs': scipy.stats.ttest_ind(res['subclonal'], res_baseline['subclonal'], alternative='greater').pvalue,
     }
 
 
@@ -261,7 +261,7 @@ def compute_metrics(res1, res2):
 
     metrics = {
         'Accuracy (ploidy)': np.mean(ploidy_accuracy(cna1, cna2)),
-        'Accuracy (poildy sign)': np.mean(sign_accuracy(cna1, cna2)),
+        'Accuracy (ploidy sign)': np.mean(sign_accuracy(cna1, cna2)),
         'SOV_REFINE': np.mean(sov_refine(cna1, cna2)),
         'r2 (Log ratios)': r2_score(log_r1.flatten(), log_r2.flatten()),
         'r2 (tumor fractions)': r2_score(fractions1.flatten(), fractions2.flatten()),
@@ -422,7 +422,7 @@ for k in range(2):
     )
     seaborn.heatmap(
         df, annot=True, fmt='.3f', ax=ax, yticklabels=(k == 0),
-        cbar=False, linewidths=2, linecolor='white'
+        cbar=False, linewidths=2, linecolor='white', cmap='viridis_r'
     )
 
 

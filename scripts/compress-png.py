@@ -26,7 +26,7 @@ def compress(in_filepath: str, out_filepath: str) -> None:
 
 
 for filename in tqdm.tqdm(os.listdir(OUT_DIR)):
-    if filename in ['DAGIP-Illustration.png', 'DAGIP-Figure-ichorCNA.png', 'DAGIP-Figure-Pairs.png']:
+    if filename in ['DAGIP-Illustration.png', 'DAGIP-Figure-ichorCNA.png', 'DAGIP-Figure-Pairs.png', 'DAGIP-Figure-Supervised-Learning.png', 'DAGIP-Final-Benchmark.png']:
         continue
     in_filepath = os.path.join(OUT_DIR, filename)
     out_filepath = os.path.join(OUT_DIR, 'compressed', filename)

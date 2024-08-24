@@ -11,7 +11,6 @@ from sklearn.manifold import TSNE
 from sklearn.svm import SVC
 
 from dagip.nipt.binning import ChromosomeBounds
-from dagip.stats.fisher import reglog_fisher_info, reglog_fisher_kernel
 
 
 MARKERS = ['x', 'o', 's', 'P', 'D', 'h', '*', 'p', '8']

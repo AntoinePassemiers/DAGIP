@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-#  ratio.py
+#  loess.py
 #
 #  Copyright 2024 Antoine Passemiers <antoine.passemiers@gmail.com>
 #
@@ -19,20 +19,25 @@
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 #  MA 02110-1301, USA.
 
-import torch
+import numpy as np
+import rpy2
+import rpy2.rinterface_lib.callbacks
+import rpy2.robjects
+import rpy2.robjects.numpy2ri
+from rpy2.robjects.packages import importr
 
-from dagip.retraction.base import Manifold
+rpy2.robjects.numpy2ri.activate()
+rpy2.rinterface_lib.callbacks.consolewrite_print = lambda x: None
 
 
-class RatioManifold(Manifold):
+_loess = rpy2.robjects.r('''
+function(endog, exog) {
+    lo <- loess(endog ~ exog, data.frame(endog=endog, exog=exog, degree=1))
+    res <- predict(lo, data.frame(exog=exog), se=TRUE)
+    res$fit
+}
+''')
 
-    def __init__(self, eps: float = 1e-7):
-        self.eps: float = eps
 
-    def _transform(self, X: torch.Tensor) -> torch.Tensor:
-        return torch.sigmoid(X)
-
-    def _inverse_transform(self, X: torch.Tensor) -> torch.Tensor:
-        #X = torch.clamp(X, self.eps, 1.0 - self.eps)
-        X = torch.clamp(X, 0, 1)
-        return torch.logit(X)
+def loess(endog: np.ndarray, exog: np.ndarray) -> np.ndarray:
+    return np.asarray(_loess(endog, exog))

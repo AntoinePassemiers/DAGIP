@@ -50,15 +50,13 @@ class LaTeXTable:
 
         for model_name, res in self.results:
             s += f'{model_name: <20}'
-            f = lambda x: f'{(int(round(1000 * x)) * 0.1):.1f}'
+            f = lambda x: f'{x:.3f}'.replace('0.', '.')
             for k in ['reglog', 'rf', 'svm']:
 
                 values = []
                 for metric in ['sensitivity', 'specificity', 'mcc', 'auroc', 'aupr']:
                     value = np.mean([x[metric] for x in res[k]])
                     value_str = f(value)
-                    #if value >= max_values[(k, metric)]:
-                    #    value_str = f'\\textbf{{{value_str}}}'
                     values.append(value_str)
                 s += f' & ' + ' & '.join(values)
             s += ' \\\\\n'
