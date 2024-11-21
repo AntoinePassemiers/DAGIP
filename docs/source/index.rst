@@ -12,7 +12,6 @@ dagip: OT-based bias correction method for high-dimensional biological data
 
    guide/quick-start
    guide/advanced-usage
-   guide/background
 
 
 Indices and tables

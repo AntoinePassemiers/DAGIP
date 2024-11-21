@@ -30,35 +30,6 @@ import rpy2.robjects.numpy2ri
 from rpy2.robjects.packages import importr
 
 
-rpy2.robjects.numpy2ri.activate()
-rpy2.rinterface_lib.callbacks.consolewrite_print = lambda x: None
-
-importr('dplyr')
-importr('GenomicRanges')
-importr('dryclean')
-_dryclean = rpy2.robjects.r('''
-function(normal_filepaths, test_filepath) {
-    pon_object = pon$new(
-        create_new_pon = TRUE, 
-        normal_vector = normal_filepaths,
-        field = "reads.corrected",
-        build = "hg38",
-        wgs = TRUE,
-        target_resolution = 1000000,
-        all.chr = as.character(1:22),
-        nochr = TRUE,
-        num.cores = 4,
-        verbose = 0
-    )
-    dryclean_object <- dryclean$new(pon = pon_object)
-    res <- dryclean_object$clean(cov = test_filepath)
-    chr_names <- seqnames(res)
-    chr_names <- with(chr_names, rep(runValue(chr_names), runLength(chr_names)))
-    list(foreground=mcols(res)$foreground, chr_names=chr_names, starts=start(res), ends=end(res))
-}
-''')
-
-
 def run_dryclean(
         bin_chr_names: List[str],
         bin_starts: List[int],
@@ -67,6 +38,36 @@ def run_dryclean(
         samples: np.ndarray,
         tmp_folder: str
 ) -> np.ndarray:
+
+    # Load dryclean
+    rpy2.robjects.numpy2ri.activate()
+    rpy2.rinterface_lib.callbacks.consolewrite_print = lambda x: None
+    importr('dplyr')
+    importr('GenomicRanges')
+    importr('dryclean')
+    _dryclean = rpy2.robjects.r('''
+    function(normal_filepaths, test_filepath) {
+        pon_object = pon$new(
+            create_new_pon = TRUE, 
+            normal_vector = normal_filepaths,
+            field = "reads.corrected",
+            build = "hg38",
+            wgs = TRUE,
+            target_resolution = 1000000,
+            all.chr = as.character(1:22),
+            nochr = TRUE,
+            num.cores = 4,
+            verbose = 0
+        )
+        dryclean_object <- dryclean$new(pon = pon_object)
+        res <- dryclean_object$clean(cov = test_filepath)
+        chr_names <- seqnames(res)
+        chr_names <- with(chr_names, rep(runValue(chr_names), runLength(chr_names)))
+        list(foreground=mcols(res)$foreground, chr_names=chr_names, starts=start(res), ends=end(res))
+    }
+    ''')
+
+
     os.makedirs(tmp_folder, exist_ok=True)
     os.makedirs(os.path.join(tmp_folder, 'pon'), exist_ok=True)
 

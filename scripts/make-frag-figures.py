@@ -39,10 +39,10 @@ def load_folder(filepaths: List[str]) -> np.ndarray:
 df = pd.read_csv(os.path.join(DATA_FOLDER, 'metadata.csv'))
 
 # Plot nucleosome positioning scores
-plt.figure(figsize=(25, 5))
+plt.figure(figsize=(18, 5))
 
 plot_params = dict(alpha=1.0, linewidth=2)
-ax = plt.subplot(1, 2, 1)
+ax = plt.subplot(1, 3, 1)
 mask = np.logical_and(df['Domain'] == 'D12', df['Category'] == 'Healthy')
 gc_codes = df['ID'][mask].to_numpy()
 X = load_folder([os.path.join(DATA_FOLDER, 'D12', 'controls', 'fragment-length-distributions', f'{gc_code}.csv') for gc_code in gc_codes])
@@ -64,73 +64,60 @@ ax.set_xlabel('Fragment length (bp)', fontsize=15)
 ax.set_ylabel('Frequency', fontsize=15)
 ax.set_title('Fragment lengths', fontsize=20)
 
-ax = plt.subplot(1, 2, 2)
-#
+ax = plt.subplot(1, 3, 2)
 mask = np.logical_and(df['Domain'] == 'D12', df['Category'] == 'Healthy')
 gc_codes = df['ID'][mask].to_numpy()
 X = load_folder([os.path.join(DATA_FOLDER, 'D12', 'controls', 'nucleosome-positioning-score-profiles', f'{gc_code}.csv') for gc_code in gc_codes])
 x = np.median(X, axis=0)
 seaborn.kdeplot(x[x > 0], label='Healthy (KAPA HyperPrep)', color='#74c2c9', ax=ax, **plot_params)
-#
 mask = np.logical_and(df['Domain'] == 'D11', df['Category'] == 'Healthy')
 gc_codes = df['ID'][mask].to_numpy()
 X = load_folder([os.path.join(DATA_FOLDER, 'D11', 'controls', 'nucleosome-positioning-score-profiles', f'{gc_code}.csv') for gc_code in gc_codes])
 x = np.median(X, axis=0)
 seaborn.kdeplot(x[x > 0], label='Healthy (NEBNext Enzymatic Methyl-seq)', color='#79d991', ax=ax, **plot_params)
-#
 mask = np.logical_and(df['Domain'] == 'D11', df['Category'] == 'BRCA')
 gc_codes = df['ID'][mask].to_numpy()
 X = load_folder([os.path.join(DATA_FOLDER, 'D11', 'cases', 'nucleosome-positioning-score-profiles', f'{gc_code}.csv') for gc_code in gc_codes])
 x = np.median(X, axis=0)
 seaborn.kdeplot(x[x > 0], label='Breast cancer (NEBNext Enzymatic Methyl-seq)', color='#df998f', ax=ax, **plot_params)
-#
 for side in ['top', 'right']:
     ax.spines[side].set_visible(False)
 ax.set_title(r'Nucleosome positioning', fontsize=20)
-ax.legend()
+#ax.legend()
 ax.set_xlabel('Nucleosome positioning score (1 Mb bins)', fontsize=15)
+ax.set_ylabel('Density', fontsize=15)
+ax.grid(alpha=0.4, color='grey', linestyle='--', linewidth=0.5)
+
+ax = plt.subplot(1, 3, 3)
+mask = np.logical_and(df['Domain'] == 'D12', df['Category'] == 'Healthy')
+gc_codes = df['ID'][mask].to_numpy()
+X = load_folder([os.path.join(DATA_FOLDER, 'D12', 'controls', 'long-fragment-ratio-profiles', f'{gc_code}.csv') for gc_code in gc_codes])
+x = np.median(X, axis=0)
+seaborn.kdeplot(x[x > 0], label='Healthy (KAPA HyperPrep)', color='#74c2c9', ax=ax, **plot_params)
+mask = np.logical_and(df['Domain'] == 'D11', df['Category'] == 'Healthy')
+gc_codes = df['ID'][mask].to_numpy()
+X = load_folder([os.path.join(DATA_FOLDER, 'D11', 'controls', 'long-fragment-ratio-profiles', f'{gc_code}.csv') for gc_code in gc_codes])
+x = np.median(X, axis=0)
+seaborn.kdeplot(x[x > 0], label='Healthy (NEBNext Enzymatic Methyl-seq)', color='#79d991', ax=ax, **plot_params)
+mask = np.logical_and(df['Domain'] == 'D11', df['Category'] == 'BRCA')
+gc_codes = df['ID'][mask].to_numpy()
+X = load_folder([os.path.join(DATA_FOLDER, 'D11', 'cases', 'long-fragment-ratio-profiles', f'{gc_code}.csv') for gc_code in gc_codes])
+x = np.median(X, axis=0)
+seaborn.kdeplot(x[x > 0], label='Breast cancer (NEBNext Enzymatic Methyl-seq)', color='#df998f', ax=ax, **plot_params)
+for side in ['top', 'right']:
+    ax.spines[side].set_visible(False)
+ax.set_title(r'Proportion of long fragments (> 166 bp)', fontsize=20)
+#ax.legend()
+ax.set_xlabel('Proportion of long fragments (1 Mb bins)', fontsize=15)
 ax.set_ylabel('Density', fontsize=15)
 ax.grid(alpha=0.4, color='grey', linestyle='--', linewidth=0.5)
 plt.tight_layout()
 plt.savefig(os.path.join(FIGURES_FOLDER, 'fragmentomics.png'), dpi=300)
 plt.show()
 
-# Plot long fragment ratios per bin
-plt.figure(figsize=(18, 5))
-
-ax = plt.subplot(1, 1, 1)
-#
-mask = np.logical_and(df['Domain'] == 'D12', df['Category'] == 'Healthy')
-gc_codes = df['ID'][mask].to_numpy()
-X = load_folder([os.path.join(DATA_FOLDER, 'D12', 'controls', 'long-fragment-ratio-profiles', f'{gc_code}.csv') for gc_code in gc_codes])
-x = np.median(X, axis=0)
-seaborn.kdeplot(x[x > 0], label='Healthy (KAPA HyperPrep)', color='#74c2c9', ax=ax, **plot_params)
-#
-mask = np.logical_and(df['Domain'] == 'D11', df['Category'] == 'Healthy')
-gc_codes = df['ID'][mask].to_numpy()
-X = load_folder([os.path.join(DATA_FOLDER, 'D11', 'controls', 'long-fragment-ratio-profiles', f'{gc_code}.csv') for gc_code in gc_codes])
-x = np.median(X, axis=0)
-seaborn.kdeplot(x[x > 0], label='Healthy (NEBNext Enzymatic Methyl-seq)', color='#79d991', ax=ax, **plot_params)
-#
-mask = np.logical_and(df['Domain'] == 'D11', df['Category'] == 'BRCA')
-gc_codes = df['ID'][mask].to_numpy()
-X = load_folder([os.path.join(DATA_FOLDER, 'D11', 'cases', 'long-fragment-ratio-profiles', f'{gc_code}.csv') for gc_code in gc_codes])
-x = np.median(X, axis=0)
-seaborn.kdeplot(x[x > 0], label='Breast cancer (NEBNext Enzymatic Methyl-seq)', color='#df998f', ax=ax, **plot_params)
-#
-for side in ['top', 'right']:
-    ax.spines[side].set_visible(False)
-ax.set_title(r'Proportion of long fragments (> 166 bp)', fontsize=20)
-ax.legend()
-ax.set_xlabel('Proportion of long fragments (1 Mb bins)', fontsize=15)
-ax.set_ylabel('Density', fontsize=15)
-ax.grid(alpha=0.4, color='grey', linestyle='--', linewidth=0.5)
-plt.tight_layout()
-plt.savefig(os.path.join(FIGURES_FOLDER, 'long-ratios.png'), dpi=300)
-plt.show()
 
 # Plot end motif frequencies in D11
-plt.figure(figsize=(25, 5))
+plt.figure(figsize=(18, 3))
 ax = plt.subplot(1, 2, 1)
 mask = np.logical_and(df['Domain'] == 'D11', df['Category'] == 'Healthy')
 gc_codes = df['ID'][mask].to_numpy()

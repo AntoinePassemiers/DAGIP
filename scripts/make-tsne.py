@@ -216,7 +216,7 @@ settings.append((1, 1, X_adapted, 'DAGIP', '#b1e468', '-'))
 
 alpha = 0.5
 size = 5
-f, ax = plt.subplots(2, 3, figsize=(18, 12))
+f, ax = plt.subplots(2, 2, figsize=(18, 12))
 
 if DATASET == 'HEMA':
     d1, d2 = '7', '8'
@@ -278,15 +278,16 @@ for i, j, X_corrected, title, color, linestyle in settings:
 
     pretty_labels = np.asarray([label_dict[label] for label in combined_labels], dtype=object)
 
-    add_legend = ((i == 0) and (j == 1))
+    add_legend = False
+    #add_legend = ((i == 0) and (j == 1))
     scatterplot_with_sample_importances(
-        ax[i, j], ax[1, 2], X_corrected, labels != 'Healthy', d, pretty_labels, cancer_stages, style_dict,
+        ax[i, j], ax[i, j], X_corrected, labels != 'Healthy', d, pretty_labels, cancer_stages, style_dict,
         stage0_label='Ductal carcinoma in situ (DCIS)', legend=add_legend
     )
     ax[i, j].set_title(title, fontsize=20)
-if len(settings) == 4:
-    ax[0, 2].axis('off')
-ax[1, 2].axis('off')
+#if len(settings) == 4:
+#    ax[0, 2].axis('off')
+#ax[1, 2].axis('off')
 
 plt.tight_layout()
 plt.savefig(os.path.join(OUT_FOLDER, f'tsne-{DATASET}.png'), dpi=300)

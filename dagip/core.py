@@ -22,7 +22,7 @@
 import os
 import os.path
 import math
-from typing import Self, Optional, Tuple, Union, Callable, List, Dict
+from typing import Optional, Tuple, Union, Callable, List, Dict
 
 import numpy as np
 import ot
@@ -538,7 +538,7 @@ class DomainAdapter:
             X_out[:, self.feature_mask] = X
             return X_out
 
-    def fit(self, X: Union[List[np.ndarray], np.ndarray], Y: Union[List[np.ndarray], np.ndarray]) -> Self:
+    def fit(self, X: Union[List[np.ndarray], np.ndarray], Y: Union[List[np.ndarray], np.ndarray]) -> 'DomainAdapter':
         X_sub, Y_sub = self.feature_filtering(X, Y, fit=True)
         X_adapted, adapter = _ot_da(X_sub, Y_sub, **self.kwargs)
         assert X_adapted.shape[1] == int(np.sum(self.feature_mask))

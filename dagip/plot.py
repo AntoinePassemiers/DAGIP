@@ -86,8 +86,8 @@ def scatterplot_with_sample_importances(ax, axl, X, y, d, labels, cancer_stages,
     ax.grid(alpha=0.4, linestyle='--', linewidth=0.5, color='grey')
     for side in ['right', 'top']:
         ax.spines[side].set_visible(False)
-    ax.set_xlabel('First t-SNE component', fontsize=10)
-    ax.set_ylabel('Second t-SNE component', fontsize=10)
+    ax.set_xlabel('First t-SNE component', fontsize=15)
+    ax.set_ylabel('Second t-SNE component', fontsize=15)
 
     # Custom legend
     if legend:

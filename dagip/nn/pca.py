@@ -19,7 +19,7 @@
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 #  MA 02110-1301, USA.
 
-from typing import Optional, Self
+from typing import Optional
 
 import numpy as np
 import torch
@@ -37,7 +37,7 @@ class DifferentiablePCA(torch.nn.Module):
     def __call__(self, X: torch.Tensor) -> torch.Tensor:
         return self.transform(X)
 
-    def fit(self, X: torch.Tensor) -> Self:
+    def fit(self, X: torch.Tensor) -> 'DifferentiablePCA':
         self.n_pcs = min(self.n_pcs, X.size(0), X.size(1))
         pca = PCA(n_components=self.n_pcs)
         pca.fit(X.cpu().data.numpy())

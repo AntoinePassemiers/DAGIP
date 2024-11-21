@@ -2,7 +2,7 @@
 
 Given two groups of matched (preferentially paired) samples sequenced under different protocols, the tool explicitly learns the bias using a neural network. The approach builds on Optimal Transport theory, and exploits sample-to-sample similarities to define how to perform bias correction.
 
-Documentations are available at [antoinepassemiers.github.io/DAGIP/](antoinepassemiers.github.io/DAGIP/)
+Documentations are available at [jorisvermeeschlab.github.io/DAGIP/](https://jorisvermeeschlab.github.io/DAGIP/)
 
 ---
 

@@ -104,8 +104,9 @@ for metric in ['mcc', 'auroc']:
 
     ax = plt.subplot(1, 1, 1)
     sns.barplot(ax=ax, x=metric, y='Pathology', hue='Method', data=df, palette=palette, orient='h', legend=False)
-    ax.set_xlabel(metric.upper())
-    ax.set_ylabel('Cancer type')
+    ax.set_xlabel(metric.upper(), fontsize=20)
+    ax.set_ylabel('Cancer type', fontsize=20)
+    ax.tick_params(axis='both', which='major', labelsize=17)
     sns.despine()
 
     for i, bar in enumerate(ax.patches):
@@ -117,17 +118,18 @@ for metric in ['mcc', 'auroc']:
             capsize=5, color='black'
         )
 
+        fontsize = 9
         if bar_width - error_bars[i] < 0.2:
             ax.annotate(
                 f'{bar_width:.3f} ± {error_bars[i]:.3f}', 
                 (bar_width + error_bars[i], bar_y + bar_height / 2.), 
                 ha='center',
                 va='center',
-                xytext=(35, -1),
+                xytext=(40, -1),
                 textcoords='offset points',
                 color='black',
                 weight='bold',
-                fontsize=7,
+                fontsize=fontsize,
             )
         else:
             ax.annotate(
@@ -139,7 +141,7 @@ for metric in ['mcc', 'auroc']:
                 textcoords='offset points',
                 color='white',
                 weight='bold',
-                fontsize=7,
+                fontsize=fontsize,
             )
 
             ax.annotate(
@@ -147,11 +149,11 @@ for metric in ['mcc', 'auroc']:
                 (bar_width + error_bars[i], bar_y + bar_height / 2.), 
                 ha='center',
                 va='center',
-                xytext=(20, -1),
+                xytext=(25, -1),
                 textcoords='offset points',
                 color='black',
                 weight='bold',
-                fontsize=7,
+                fontsize=fontsize,
             )
 
     plt.tight_layout()
@@ -182,7 +184,8 @@ for metric in ['mcc', 'auroc']:
         df, annot=True, fmt='.1e', ax=ax,
         cbar=False, linewidths=2, linecolor='white', cmap='viridis_r'
     )
-    ax.set_title(f'Significance of {metric.upper()} differences (t-test p-values)')
+    ax.tick_params(axis='both', which='major', labelsize=11)
+    ax.set_title(f'Significance of {metric.upper()} differences (t-test p-values)', fontsize=13)
     plt.tight_layout()
     plt.savefig(os.path.join(FIGURES_FOLDER, f'{metric}-significance.png'), dpi=400)
 
@@ -211,18 +214,19 @@ for k, (title, dataset) in enumerate(zip(TITLES, DATASETS)):
                 y_hat.append(res['y-pred'])
         y, y_hat = np.concatenate(y, axis=0), np.concatenate(y_hat, axis=0)
 
+        fontsize = 15
         if roc:
             fpr, tpr, _ = roc_curve(y, y_hat)
             ax.plot(fpr, tpr, label=method_name, color=COLORS[i], alpha=0.8)
-            ax.set_xlabel('False positive rate')
-            ax.set_ylabel('True positive rate')
+            ax.set_xlabel('False positive rate', fontsize=fontsize)
+            ax.set_ylabel('True positive rate', fontsize=fontsize)
         else:
             precision, recall, _ = precision_recall_curve(y, y_hat)
             ax.plot(recall, precision, label=method_name, color=COLORS[i], alpha=0.8)
-            ax.set_xlabel('Recall')
-            ax.set_ylabel('Precision')
+            ax.set_xlabel('Recall', fontsize=fontsize)
+            ax.set_ylabel('Precision', fontsize=fontsize)
 
-        ax.set_title(title)
+        ax.set_title(title, fontsize=18)
 
     ax.grid(alpha=0.4, linestyle='--', linewidth=0.5, color='black')
     for side in ['right', 'top']:

@@ -6,7 +6,6 @@ import sys
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.join(ROOT, '..'))
-sys.path.append('/lustre1/project/stg_00019/research/Antoine/dependencies')
 
 import ot.da
 import numpy as np
@@ -34,9 +33,8 @@ from dagip.tools.dryclean import run_dryclean
 
 
 DATA_FOLDER = os.path.join(ROOT, '..', 'data')
-RESULTS_FOLDER = os.path.join(ROOT, '..', 'results', 'pairs')
+RESULTS_FOLDER = os.path.join(ROOT, '..', 'results', 'pairs-raw')
 os.makedirs(RESULTS_FOLDER, exist_ok=True)
-
 
 
 parser = argparse.ArgumentParser()
@@ -113,6 +111,7 @@ def main(METHOD: str, DATASET: str) -> None:
                 used.add(j)
     idx1 = np.asarray(idx1, dtype=int)
     idx2 = np.asarray(idx2, dtype=int)
+    idx_combined = np.concatenate((idx1, idx2), axis=0)
 
     # GC-correction
     if METHOD == 'baseline-loess':
@@ -122,16 +121,15 @@ def main(METHOD: str, DATASET: str) -> None:
     elif METHOD == 'baseline-polynomial':
         for i in list(idx1) + list(idx2):
             X[i, :] /= np.polyval(np.polyfit(gc_content, X[i, :], 5), gc_content)
-    if METHOD == 'baseline':
-        X[idx1] = gc_correction(X[idx1], gc_content)
-        X[idx2] = gc_correction(X[idx2], gc_content)
+    else:
+        X[idx_combined] = gc_correction(X[idx_combined], gc_content)
 
     print(f'Number of pairs: {len(idx1)}')
 
 
     if METHOD == 'dryclean':
-        X[idx1, :] = run_dryclean(bin_chr_names, bin_starts, bin_ends, X[idx1, :], X[idx1, :], 'tmp-dryclean')
-        X[idx2, :] = run_dryclean(bin_chr_names, bin_starts, bin_ends, X[idx2, :], X[idx2, :], 'tmp-dryclean')
+        X[idx1, :] = run_dryclean(bin_chr_names, bin_starts, bin_ends, X[idx1, :], X[idx1, :], os.path.join('tmp-dryclean', DATASET))
+        X[idx2, :] = run_dryclean(bin_chr_names, bin_starts, bin_ends, X[idx2, :], X[idx2, :], os.path.join('tmp-dryclean', DATASET))
 
 
     Y_target, Y_pred = [], []
@@ -174,47 +172,11 @@ def main(METHOD: str, DATASET: str) -> None:
     Y_pred = np.concatenate(Y_pred, axis=0)
     Y_target = np.concatenate(Y_target, axis=0)
 
-    ss_tot = np.mean(np.square(Y_target - np.mean(Y_target, axis=0)[np.newaxis, :]))
-    ss_res = np.mean(np.square(Y_pred - Y_target))
-    r2 = 1. - ss_res / ss_tot
-
-    D = cdist(Y_pred, Y_target)
-
-    correct1 = np.arange(D.shape[0]) == np.argmin(D, axis=0)
-    correct2 = np.arange(D.shape[0]) == np.argmin(D, axis=1)
-    correct = np.logical_and(correct1, correct2)
-
-    results = {
-        'n': len(correct),
-        'accuracy': float(np.mean(correct)),
-        'r2': float(r2)
-    }
-
-    pca = PCA(n_components=25)
-    Y_target = pca.fit_transform(Y_target)
-    Y_pred = pca.transform(Y_pred)
-
-    ss_tot = np.mean(np.square(Y_target - np.mean(Y_target, axis=0)[np.newaxis, :]))
-    ss_res = np.mean(np.square(Y_pred - Y_target))
-    r2 = 1. - ss_res / ss_tot
-
-    D = cdist(Y_pred, Y_target)
-
-    correct1 = np.arange(D.shape[0]) == np.argmin(D, axis=0)
-    correct2 = np.arange(D.shape[0]) == np.argmin(D, axis=1)
-    correct = np.logical_and(correct1, correct2)
-
-    results['pca25-accuracy'] = float(np.mean(correct))
-    results['pca25-r2'] = float(r2)
-
-    print(f'Results for method {METHOD} and dataset {DATASET}')
-    print(results)
-
-    with open(os.path.join(RESULTS_FOLDER, f'{DATASET}-{METHOD}.json'), 'w') as f:
-        json.dump(results, f)
+    np.savez(os.path.join(RESULTS_FOLDER, f'{DATASET}-{METHOD}.json.npz'), ypred=Y_pred, ytarget=Y_target)
 
 
-
-METHODS = ['baseline', 'centering-scaling', 'dryclean', 'mapping-transport', 'da']
+METHODS = ['mapping-transport']
+#METHODS = ['baseline', 'centering-scaling', 'dryclean', 'mapping-transport', 'da']
 for method in METHODS:
+    #if not os.path.exists(os.path.join(RESULTS_FOLDER, f'{DATASET}-{method}.json')):
     main(method, DATASET)

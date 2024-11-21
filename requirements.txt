@@ -10,6 +10,7 @@ POT
 # Machine learning
 torch
 scikit-learn
+lightgbm
 adapt
 
 # Visualization

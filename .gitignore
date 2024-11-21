@@ -8,10 +8,12 @@
 *.npz
 *.filepart
 
+results/
 figures/
 ichor-cna-results/
 ichorCNA-master/
 tmp/
+tmp-dryclean/
 
 .idea/
 *.egg-info/

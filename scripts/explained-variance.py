@@ -1,6 +1,7 @@
 import argparse
 import collections
 import os
+import random
 import json
 import sys
 
@@ -41,7 +42,7 @@ os.makedirs(RESULTS_FOLDER, exist_ok=True)
 os.makedirs(FIGURES_FOLDER, exist_ok=True)
 
 
-def main(DATASET: str) -> None:
+def plot_explained_variance(DATASET: str, ax) -> None:
 
     print(DATASET)
 
@@ -103,144 +104,64 @@ def main(DATASET: str) -> None:
     idx1 = np.asarray(idx1, dtype=int)
     idx2 = np.asarray(idx2, dtype=int)
 
-
-    pca = PCA()
-    pca.fit(X[idx2, :])
-    xs = np.cumsum(pca.explained_variance_ratio_)
-    n_pcs = max(np.where(xs >= 0.95)[0][0] + 1, 5)
-    #n_pcs = 45
-    pca = PCA(n_components=n_pcs)
-    pca.fit(X[idx2, :])
-
-
-    X_ces = np.copy(X)
-    target_scaler = RobustScaler()
-    target_scaler.fit(X[idx2, :])
-    source_scaler = RobustScaler()
-    source_scaler.fit(X[idx1, :])
-    X_ces[idx1, :] = target_scaler.inverse_transform(source_scaler.transform(X[idx1, :]))
-
-    X_dry = np.load(os.path.join(RESULTS_FOLDER, 'corrected', 'dryclean', f'{DATASET}-corrected.npy'))
-    pca_dry = PCA(n_components=n_pcs)
-    pca_dry.fit(X_dry[idx2, :])
-
-    metric = 'braycurtis'
-    C = cdist(pca.transform(X[idx1, :]), pca.transform(X[idx2, :]), metric=metric)
-    C_ces = cdist(pca.transform(X_ces[idx1, :]), pca.transform(X_ces[idx2, :]), metric=metric)
-    C_dry = cdist(pca_dry.transform(X_dry[idx1, :]), pca_dry.transform(X_dry[idx2, :]), metric=metric)
-
-    n = C.shape[0]
-    m = C.shape[1]
-    a = np.full(n, 1. / n)
-    b = np.full(m, 1. / m)
-
-    reg_rate = 0.1 * np.mean(C)
-
-    gamma = ot.emd(a, b, C)
-    X_ot = np.copy(X)
-    X_ot[idx1, :] = np.dot(gamma / np.sum(gamma, axis=1)[:, np.newaxis], X[idx2, :])
-    C_ot = cdist(pca.transform(X_ot[idx1, :]), pca.transform(X_ot[idx2, :]), metric=metric)
-
-    is_correct = np.logical_and(
-        np.argmin(C, axis=0) == np.arange(len(C)),
-        np.argmin(C, axis=1) == np.arange(len(C)),
-    )
-    is_correct2 = np.logical_and(
-        np.argmin(C_ces, axis=0) == np.arange(len(C)),
-        np.argmin(C_ces, axis=1) == np.arange(len(C)),
-    )
-    is_correct3 = np.logical_and(
-        np.argmin(C_dry, axis=0) == np.arange(len(C)),
-        np.argmin(C_dry, axis=1) == np.arange(len(C)),
-    )
-    is_correct4 = np.logical_and(
-        np.argmax(gamma, axis=0) == np.arange(len(gamma)),
-        np.argmax(gamma, axis=1) == np.arange(len(gamma)),
-    )
-
     if DATASET == 'OV':
         domain0_name = r'$\mathcal{D}_{9}$ protocol'
         domain1_name = r'$\mathcal{D}_{10}$ protocol'
+        color = 'peru'
     elif DATASET == 'NIPT-lib':
         domain0_name = r'TruSeq Nano kit ($\mathcal{D}_{1,a}$)'
         domain1_name = r'Kapa HyperPrep kit ($\mathcal{D}_{1,b}$)'
+        color = 'firebrick'
     elif DATASET == 'NIPT-adapter':
         domain0_name = r'IDT indexes ($\mathcal{D}_{2,a}$)'
         domain1_name = r'Kapa dual indexes ($\mathcal{D}_{2,b}$)'
+        color = 'darkviolet'
     elif DATASET == 'NIPT-hs2000':
         domain0_name = r'HiSeq 2000 ($\mathcal{D}_{3,a}$)'
         domain1_name = r'NovaSeq ($\mathcal{D}_{3,b}$)'
+        color = 'teal'
     elif DATASET == 'NIPT-hs2500':
         domain0_name = r'HiSeq 2500 ($\mathcal{D}_{4,a}$)'
         domain1_name = r'NovaSeq ($\mathcal{D}_{4,b}$)'
+        color = 'steelblue'
     elif DATASET == 'NIPT-hs4000':
         domain0_name = r'HiSeq 4000 ($\mathcal{D}_{5,a}$)'
         domain1_name = r'NovaSeq ($\mathcal{D}_{5,b}$)'
+        color = 'forestgreen'
     elif DATASET == 'NIPT-chemistry':
         domain0_name = r'NovaSeq V1 chemistry ($\mathcal{D}_{6,a}$)'
         domain1_name = r'NovaSeq V1.5 chemistry ($\mathcal{D}_{6,b}$)'
+        color = 'darkmagenta'
     else:
         raise NotImplementedError()
 
-    #kwargs = dict(cmap='GnBu', aspect='equal')
-    kwargs = dict(cmap='BuPu', aspect='equal')
+    # PCA
+    pca = PCA()
+    pca.fit(X[idx1, :])
+    explained_variance1 = np.cumsum(pca.explained_variance_ / np.sum(pca.explained_variance_), axis=0)
+    pca = PCA()
+    pca.fit(X[idx2, :])
+    explained_variance2 = np.cumsum(pca.explained_variance_ / np.sum(pca.explained_variance_), axis=0)
 
-    plt.figure(figsize=(10, 8))
+    xs = np.cumsum(pca.explained_variance_ratio_)
+    n_pcs = max(np.where(xs >= 0.95)[0][0] + 1, 5)
 
-    ax = plt.subplot(2, 2, 1)
-    im = ax.imshow(C, **kwargs)
-    ax.set_title(f'Baseline\nPairwise distances\nAccuracy: {np.sum(is_correct)} / {len(gamma)}')
-    ax.set_xticks([], [])
-    ax.set_yticks([], [])
-    ax.set_xlabel(domain0_name)
-    ax.set_ylabel(domain1_name)
-    ax.figure.colorbar(im, ax=ax)
-
-    ax = plt.subplot(2, 2, 2)
-    im = ax.imshow(C_ces, **kwargs)
-    ax.set_title(f'Center-and-scale\nPairwise distances\nAccuracy: {np.sum(is_correct2)} / {len(gamma)}')
-    ax.set_xticks([], [])
-    ax.set_yticks([], [])
-    ax.set_xlabel(domain0_name)
-    ax.set_ylabel(domain1_name)
-    ax.figure.colorbar(im, ax=ax)
-
-    ax = plt.subplot(2, 2, 3)
-    im = ax.imshow(C_dry, **kwargs)
-    ax.set_title(f'dryclean\nPairwise distances\nAccuracy: {np.sum(is_correct3)} / {len(gamma)}')
-    ax.set_xticks([], [])
-    ax.set_yticks([], [])
-    ax.set_xlabel(domain0_name)
-    ax.set_ylabel(domain1_name)
-    ax.figure.colorbar(im, ax=ax)
-
-    ax = plt.subplot(2, 2, 4)
-    kwargs['cmap'] = 'BuPu'
-    #im = ax.imshow(gamma, **kwargs)
-    im = ax.imshow(C_ot, **kwargs)
-    ax.set_title(f'Optimal transport\nTransport plan\nAccuracy: {np.sum(is_correct4)} / {len(gamma)}')
-    ax.set_xticks([], [])
-    ax.set_yticks([], [])
-    ax.set_xlabel(domain0_name)
-    ax.set_ylabel(domain1_name)
-    ax.figure.colorbar(im, ax=ax)
-
-    plt.tight_layout()
-    plt.savefig(os.path.join(FIGURES_FOLDER, f'cdist-{DATASET}.png'), dpi=400)
-    plt.cla()
-    plt.clf()
-
-    return [
-        np.mean(is_correct),
-        np.mean(is_correct2),
-        np.mean(is_correct3),
-        np.mean(is_correct4),
-    ]
+    ax.plot(explained_variance1, label=f'{domain0_name}', linestyle='-', color=color)
+    ax.plot(explained_variance2, label=f'{domain1_name} (PC={n_pcs})', linestyle='--', color=color)
 
 
-DATASETS = ['OV', 'NIPT-chemistry', 'NIPT-lib', 'NIPT-adapter', 'NIPT-hs2000', 'NIPT-hs2500', 'NIPT-hs4000']
-with open(os.path.join(RESULTS_FOLDER, 'ot-acc.csv'), 'w') as f:
-    f.write(',Baseline,Center-and-scale,dryclean,Optimal transport\n')
-    for dataset in DATASETS:
-        res = main(dataset)
-        f.write(dataset + ',' + ','.join([str(x) for x in res]) + '\n')
+DATASETS = ['OV', 'NIPT-hs2500', 'NIPT-hs2000', 'NIPT-lib', 'NIPT-hs4000', 'NIPT-adapter', 'NIPT-chemistry']
+plt.figure(figsize=(10, 6))
+ax = plt.subplot(1, 1, 1)
+for k, dataset in enumerate(DATASETS):
+    plot_explained_variance(dataset, ax)
+for side in ['top', 'right']:
+    ax.spines[side].set_visible(False)
+ax.grid(alpha=0.4, color='grey', linestyle='--', linewidth=0.5)
+ax.axhline(y=0.95, color='black', linestyle='--', linewidth=2)
+ax.set_xlabel('Principal components')
+ax.set_ylabel('Cumulative explained variance ratio')
+ax.legend()
+plt.tight_layout()
+plt.savefig('explained-variance.png', dpi=300)
+plt.show()
