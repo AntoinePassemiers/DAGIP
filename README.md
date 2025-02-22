@@ -57,29 +57,29 @@ To reproduce the results presented in our paper, first download the datasets fro
 
 Preprocess the data:
 ```bash
-python scripts/preprocess.py
-python scripts/50kb-to1mb.py
-python scripts/to-numpy.py
+python data/preprocess.py
+python data/50kb-to1mb.py
+python data/to-numpy.py
 ```
 
 #### Cancer detection
 
 ```bash
-python validate-cnas.py HL
-python validate-cnas.py DLBCL
-python validate-cnas.py MM
-python validate-cnas.py OV
-python validate-fragmentomics-multimodal.py
+python scripts/validate-cnas.py HL
+python scripts/validate-cnas.py DLBCL
+python scripts/validate-cnas.py MM
+python scripts/validate-cnas.py OV
+python scripts/validate-fragmentomics-multimodal.py
 ```
 
 #### Cross-validation with paired samples
 
 ```bash
-python identify-pairs.py OV-forward
-python identify-pairs.py NIPT-chemistry
-python identify-pairs.py NIPT-lib
-python identify-pairs.py NIPT-adapter
-python identify-pairs.py NIPT-hs2000
-python identify-pairs.py NIPT-hs2500
-python identify-pairs.py NIPT-hs4000
+python scripts/identify-pairs.py OV-forward
+python scripts/identify-pairs.py NIPT-chemistry
+python scripts/identify-pairs.py NIPT-lib
+python scripts/identify-pairs.py NIPT-adapter
+python scripts/identify-pairs.py NIPT-hs2000
+python scripts/identify-pairs.py NIPT-hs2500
+python scripts/identify-pairs.py NIPT-hs4000
 ```
